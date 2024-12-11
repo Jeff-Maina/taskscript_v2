@@ -6,15 +6,18 @@ console = Console()
 
 
 config_file = os.path.join('../taskscript_v2', '.config.json')
-storage_directory = os.path.join('../taskscript_v2', '.storage')
+storage_directory = './.storage'
 
 def clear_terminal():
     os.system('cls' if os.name == 'nt' else 'clear')
 
-
+# markup
 def linebreak(separator=" "):
     print(separator * 30)
 
+def heading(title):
+    clear_terminal()
+    console.print(f"\n  [red bold]{title}\n")
 
 def has_configured():
     return True if os.path.exists(".config.json") else False
@@ -26,25 +29,21 @@ def get_configuration():
 
 
 def create_folder(folder):
-    app_config = get_configuration()
+    folder_path = os.path.join(storage_directory, folder)
 
-    if not os.path.exists(folder):
-        folder_path = os.path.join(storage_directory, folder)
+    if not os.path.exists(folder_path):
 
         os.makedirs(folder_path)
-        folder_abs_path = os.path.abspath(folder_path)
-        console.print(
-            f"[green]✔[/green] Succesfully created [light_slate_blue][link=file:///{folder_abs_path}]{folder}[/link][/light_slate_blue]")
-
-        file_name = f'{folder}_todos.json'
+        
+        file_name = f'_{folder}-todos.json'
         file_path = os.path.join(storage_directory, folder, file_name)
-
-        file_abs_path = os.path.abspath(file_path)
+        
         with open(file_path, 'w') as f:
             f.write("{\n}")
-
-            console.print(
-                f"[green]✔[/green] Succesfully created [grey39][link=file:///{file_abs_path}]{file_name}[/link][/grey39]")
     else:
-        console.print(
-                f"[red]✔[/red][grey39][link=file:///{file_path}]{folder}[/link][/grey39] already exists.")
+        raise FileExistsError
+
+def get_projects():
+    folders = os.listdir(storage_directory)
+
+    return folders
