@@ -16,9 +16,9 @@ def main():
     linebreak()
 
     if has_configured():
-        configure_application()
-    else:
         main_menu()
+    else:
+        configure_application()
 
     
 
