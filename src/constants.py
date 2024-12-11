@@ -21,3 +21,9 @@ pointer_options = [
     Choice(name=" -->", value=" -->")
 ]
 
+
+priority_options = [
+    Choice(name="High", value=1),
+    Choice(name="Medium", value=2),
+    Choice(name="Low", value=3)
+]

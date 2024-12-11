@@ -10,7 +10,8 @@ import time
 
 from .utils import linebreak, clear_terminal, get_configuration, create_folder, get_projects, heading
 from .styles import custom_syles
-from .constants import themes, pointer_options
+from .constants import themes, pointer_options, priority_options
+from .task import Task
 
 console = Console()
 
@@ -232,18 +233,17 @@ def view_project_tasks(project):
 
     completed_tasks = [task for task in tasks if tasks[task]['isComplete']]
 
-    console.print(f"\n  [underline]{project}[/underline]  [grey39][{len(completed_tasks)}/{len(tasks)}][/grey39]\n")
-
+    console.print(
+        f"\n  [underline]{project}[/underline]  [grey39][{len(completed_tasks)}/{len(tasks)}][/grey39]\n")
 
     for task_id, task_details in tasks.items():
         isComplete = task_details['isComplete']
         status = '✔' if isComplete else "□"
         description = f"[grey39]{task_details['description']}[/grey39]" if isComplete else f"{task_details['description']}"
-    
+
         console.print(
             f"  {task_details['_id']}. {status} {description} [yellow]{','.join(task_details['tags'])}[/yellow]")
 
-    
     task_options = [
         Choice(name="Add task", value=0),
         Choice(name="Edit task", value=1),
@@ -264,9 +264,53 @@ def view_project_tasks(project):
         style=custom_syles
     ).execute()
 
+    if selected_option == 0:
+        add_task(project, tasks)
 
-    
+        view_project_tasks(project)
+
+    if selected_option == 6:
+        main_menu()
+
+    if selected_option == 7:
+        exit_application()
+
+
+def add_task(project, tasks):
+
+    task_description = inquirer.text(
+        message="Enter task description",
+        style=custom_syles,
+    ).execute()
+
+    task_tags = inquirer.text(
+        message="Enter task tags (comma-separated)",
+        style=custom_syles,
+    ).execute()
+
+    priority = inquirer.select(
+        message="Select task priority",
+        choices=priority_options,
+        style=custom_syles,
+        default='Medium',
+        pointer=app_config['pointer']
+    ).execute()
+
+    task_tags = [f'@{tag.strip()}' for tag in task_tags.split(',') if tag.strip()]
+
+    task = Task(len(tasks) + 1, task_description, priority, task_tags)
+
+    tasks[task._id] = task.to_json()
+
+    json_path = os.path.join(storage_directory, project,
+                             f'_{project}-todos.json')
+
+    with open(json_path, 'w') as file:
+        json.dump(tasks, file)
+
 # load tasks from json file
+
+
 def load_tasks(project):
     json_path = os.path.join(storage_directory, project,
                              f'_{project}-todos.json')
