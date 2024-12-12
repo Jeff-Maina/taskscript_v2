@@ -1,5 +1,6 @@
 import os
 import json
+import time
 
 from rich.console import Console
 console = Console(record=True)
@@ -66,44 +67,62 @@ def generate_report(selected_formats, table, reports_data):
     if 'html' in selected_formats or 'svg' in selected_formats or 'txt' in selected_formats:
         console.print(table)
 
+        linebreak()
+
     reports_folder = 'reports'
     os.makedirs(reports_folder, exist_ok=True)
 
-    for format in selected_formats:
+    with console.status("Generating reports...") as st:
+        for format in selected_formats:
 
-        if format == 'html':
-            html_file = 'reports_table.html'
+            if format == 'html':
+                html_file = 'reports_table.html'
 
-            html = console.export_html(clear=False)
+                html = console.export_html(clear=False)
+               
+                with open(os.path.join(reports_folder, html_file), 'w') as file:
+                    file.write(html)
 
-            with open(os.path.join(reports_folder, html_file), 'w') as file:
-                file.write(html)
+                    console.print(
+                        f"[green]✔[/green] Successfully created [light_slate_blue][link=file:///{os.path.abspath(os.path.join(reports_folder, html_file))}]{html_file}[/link][/light_slate_blue]")
+                    time.sleep(0.2)
 
-        if format == 'svg':
-            svg_file = 'reports_table.svg'
+            if format == 'svg':
+                svg_file = 'reports_table.svg'
 
-            svg = console.export_svg(clear=False)
+                svg = console.export_svg(clear=False)
 
-            with open(os.path.join(reports_folder, svg_file), 'w') as file:
-                file.write(svg)
+                with open(os.path.join(reports_folder, svg_file), 'w') as file:
+                    file.write(svg)
 
-        if format == 'csv':
+                    console.print(
+                        f"[green]✔[/green] Successfully created [light_slate_blue][link=file:///{os.path.abspath(os.path.join(reports_folder, svg_file))}]{svg_file}[/link][/light_slate_blue]")
+                    time.sleep(0.2)
 
-            cols = 'Index,Folder,Completed tasks,Pending tasks,Total tasks'
+            if format == 'csv':
 
-            with open(os.path.join(reports_folder, 'reports.csv'), 'w') as file:
-                file.write(f"{cols}\n")
-                for data in reports_data:
-                    file.write(
-                        f"{data['id']},{data['project']},{data['completed_tasks']},{data['pending_tasks']},{data['total_tasks']}\n")
+                cols = 'Index,Folder,Completed tasks,Pending tasks,Total tasks'
 
+                with open(os.path.join(reports_folder, 'reports.csv'), 'w') as file:
+                    file.write(f"{cols}\n")
+                    for data in reports_data:
+                        file.write(
+                            f"{data['id']},{data['project']},{data['completed_tasks']},{data['pending_tasks']},{data['total_tasks']}\n")
 
-        if format == 'json':
-            with open(os.path.join(reports_folder, 'reports.json'), 'w') as file:
-                file.write("[\n")
-                for index, data in enumerate(reports_data):
-                    if index == len(reports_data) - 1:
-                        file.write(f"{json.dumps(data)}\n")
-                    else:
-                        file.write(f"{json.dumps(data)},\n")
-                file.write("]\n")
+                    console.print(
+                        f"[green]✔[/green] Successfully created [light_slate_blue][link=file:///{os.path.abspath(os.path.join(reports_folder, 'reports.csv'))}]reports.csv[/link][/light_slate_blue]")
+                    time.sleep(0.2)
+
+            if format == 'json':
+                with open(os.path.join(reports_folder, 'reports.json'), 'w') as file:
+                    file.write("[\n")
+                    for index, data in enumerate(reports_data):
+                        if index == len(reports_data) - 1:
+                            file.write(f"{json.dumps(data)}\n")
+                        else:
+                            file.write(f"{json.dumps(data)},\n")
+                    file.write("]\n")
+
+                    console.print(
+                        f"[green]✔[/green] Successfully created [light_slate_blue][link=file:///{os.path.abspath(os.path.join(reports_folder, 'reports.json'))}]reports.json[/link][/light_slate_blue]")
+                    time.sleep(0.2)
