@@ -237,13 +237,7 @@ def view_project_tasks(project):
         f"\n  [underline]{project}[/underline]  [grey39][{len(completed_tasks)}/{len(tasks)}][/grey39]\n")
 
     for index, (task_id, task_details) in enumerate(tasks.items()):
-        isComplete = task_details['isComplete']
-        status = '✔' if isComplete else "□"
-        description = f"[grey39]{task_details['description']}[/grey39]" if isComplete else f"{task_details['description']}"
-
-        console.print(
-            f"  {index + 1}. {status} {description} [yellow]{' '.join(task_details['tags'])}[/yellow]")
-
+        render_task(task_details, index)
     task_options = [
         Choice(name="Add task", value=0),
         Choice(name="Edit task", value=1),
@@ -275,7 +269,15 @@ def view_project_tasks(project):
         view_project_tasks(project)
 
     if selected_option == 2:
-        pass
+        selected_tasks = inquirer.text(
+            message="Enter task tags (comma-separated)",
+            style=custom_syles,
+        ).execute()
+
+        selected_indices = [int(task.strip())
+                            for task in selected_tasks.split(",") if task.strip()]
+
+        select_tasks(project, tasks, selected_indices)
     if selected_option == 3:
         pass
     if selected_option == 6:
@@ -345,7 +347,7 @@ def edit_task(project, tasks):
     priority = inquirer.select(
         message='Enter new priority',
         default=task['priority'],
-        style=custom_syles, 
+        style=custom_syles,
         choices=priority_options
     ).execute()
 
@@ -360,7 +362,66 @@ def edit_task(project, tasks):
         json.dump(tasks, f)
 
 
-# load tasks from json file
+def delete_task(project, tasks, selected_indices):
+    pass
+
+
+def select_tasks(project, tasks, selected_indices):
+    heading(f"Selected tasks [grey39]{len(selected_indices)} selected")
+
+    file_path = os.path.join(storage_directory, project,
+                             f'_{project}-todos.json')
+
+    for index, (task_id, task_details) in enumerate(tasks.items()):
+        if (index + 1) in selected_indices:
+            render_task(task_details, index)
+
+    action_options = [
+        Choice(name='Add tags', value=0),
+        Choice(name='Change priority', value=1),
+        Choice(name='Mark as complete', value=2),
+        Choice(name='Mark as incomplete', value=3),
+        Choice(name='Delete tasks', value=4),
+        Choice(name='Back to tasklist', value=5),
+    ]
+
+    linebreak()
+    select_action = inquirer.select(
+        message='Select action',
+        choices=action_options,
+        style=custom_syles,
+        pointer=app_config['pointer']
+    ).execute()
+
+    if select_action == 0:
+        task_tags = inquirer.text(
+            message="Enter task tags (comma-separated)",
+            style=custom_syles,
+        ).execute()
+
+        task_tags = [
+            f'@{tag.strip()}' for tag in task_tags.split(',') if tag.strip()]
+
+        for index, (task_id, task_details) in enumerate(tasks.items()):
+            if (index + 1) in selected_indices:
+                task_details['tags'] = task_tags
+
+        with open(file_path, 'w') as f:
+            json.dump(tasks, f)
+
+    if select_action == 5:
+        view_project_tasks(project)
+
+
+def render_task(details, index):
+    isComplete = details['isComplete']
+    status = '✔' if isComplete else "□"
+    description = f"[grey39]{details['description']}[/grey39]" if isComplete else f"{details['description']}"
+
+    console.print(
+        f"  {index + 1}. {status} {description} [yellow]{' '.join(details['tags'])}[/yellow]")
+
+    # load tasks from json file
 
 
 def load_tasks(project):
