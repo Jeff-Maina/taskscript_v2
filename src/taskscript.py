@@ -390,6 +390,7 @@ def select_tasks(project, tasks, selected_indices):
         pointer=app_config['pointer']
     ).execute()
 
+    # add tags
     if select_action == 0:
         task_tags = inquirer.text(
             message="Enter task tags (comma-separated)",
@@ -408,6 +409,7 @@ def select_tasks(project, tasks, selected_indices):
 
         view_project_tasks(project)
 
+    # change priority
     if select_action == 1:
         priority = inquirer.select(
             message="Select priority",
@@ -423,16 +425,29 @@ def select_tasks(project, tasks, selected_indices):
 
         view_project_tasks(project)
 
+    # mark as complete
     if select_action == 2:
         for index, (task_id, task_details) in enumerate(tasks.items()):
             if (index + 1) in selected_indices:
                 task_details['isComplete'] = True
 
+        with open(file_path, 'w') as f:
+            json.dump(tasks, f)
+
+        view_project_tasks(project)
+
+    # mark as incomplete
     if select_action == 3:
         for index, (task_id, task_details) in enumerate(tasks.items()):
             if (index + 1) in selected_indices:
                 task_details['isComplete'] = False
 
+        with open(file_path, 'w') as f:
+            json.dump(tasks, f)
+
+        view_project_tasks(project)
+
+    # delete tasks
     if select_action == 4:
 
         filtered_tasks = {task_id: task_details for index, (task_id, task_details) in enumerate(
@@ -459,7 +474,7 @@ def render_task(details, index):
 
 
 def load_tasks(project):
-    
+
     json_path = get_json_file(project)
     with open(json_path, 'r') as file:
         data = json.load(file)
