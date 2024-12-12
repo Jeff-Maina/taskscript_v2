@@ -1,6 +1,7 @@
 from InquirerPy import inquirer
 from rich.text import Text
 from rich.console import Console
+from rich.table import Table
 from InquirerPy.base.control import Choice
 from yaspin import yaspin
 
@@ -20,13 +21,12 @@ app_config = get_configuration()
 storage_directory = os.path.join('./.storage')
 
 
-def configure_application():
-    console.print("  configure application")
-    linebreak()
+def configure_application(title="configure application"):
+    heading(title)
 
     project_directory = inquirer.filepath(
         message="Enter your project directory",
-        default=".",
+        default=app_config.get("project_directory", '.'),
         style=custom_syles,
     ).execute()
 
@@ -34,13 +34,15 @@ def configure_application():
         message="Select theme",
         choices=themes,
         style=custom_syles,
-        pointer=app_config['pointer']
+        pointer=app_config['pointer'],
+        default=app_config.get("theme", 'dark')
     ).execute()
 
     pointer = inquirer.select(
         message="Select pointer",
         choices=pointer_options,
         style=custom_syles,
+        default=app_config.get("pointer", "▶"),
         pointer=app_config['pointer']
     ).execute()
 
@@ -50,8 +52,29 @@ def configure_application():
         "pointer": pointer
     }
 
-    with open(config_file, 'w') as f:
-        f.write(json.dumps(config_dict, indent=4))
+    linebreak()
+    console.print(
+        f"  [grey39]Project directory[/grey39]: {app_config['project_directory']}")
+    console.print(f"  [grey39]Theme[/grey39]:  {app_config['theme']}")
+    console.print(f"  [grey39]Pointer[/grey39]: {app_config['pointer']}")
+    linebreak()
+
+    confirm_save = inquirer.confirm(
+        message='Confirm save changes to configuration file?',
+        style=custom_syles,
+        default=True
+    ).execute()
+
+    if confirm_save:
+        with console.status('Setting configuration...') as st:
+            with open(config_file, 'w') as f:
+                f.write(json.dumps(config_dict, indent=4))
+            time.sleep(0.2)
+            st.update("✔ Successfully set configuration")
+
+        main_menu()
+    else:
+        main_menu()
 
 
 def main_menu():
@@ -82,6 +105,15 @@ def main_menu():
 
     if main_menu_choice == 2:
         view_configuration()
+
+    if main_menu_choice == 3:
+        update_configuration()
+
+    if main_menu_choice == 4:
+        view_reports()
+
+    if main_menu_choice == 5:
+        exit_application()
 
 
 def manage_project_tasks():
@@ -169,6 +201,28 @@ def create_new_project():
 
     linebreak()
 
+    options = [
+        Choice(name='View all projects', value=0),
+        Choice(name='Create new project', value=1),
+        Choice(name='Back to main menu', value=2)
+    ]
+
+    selected_option = inquirer.select(
+        message='Select option',
+        pointer=app_config['pointer'],
+        style=custom_syles,
+        choices=options
+    ).execute()
+
+    if selected_option == 0:
+        view_projects()
+    if selected_option == 1:
+        create_new_project()
+    if selected_option == 2:
+        main_menu()
+
+
+
 
 # generate tasks for each project
 def generate_tasks_for_projects():
@@ -192,31 +246,52 @@ def generate_tasks_for_projects():
     else:
         linebreak()
 
-        if len(selected_folders) > 0:
-            with console.status("Creating folders..."):
-                for folder in selected_folders:
+        with console.status("Creating folders..."):
+            for folder in selected_folders:
 
-                    folder_abs_path = os.path.abspath(
-                        os.path.join(storage_directory, folder))
-                    file_path = os.path.join(
-                        storage_directory, folder, f'_{folder}_tasks.json')
-                    file_abs_path = os.path.abspath(file_path)
+                folder_abs_path = os.path.abspath(
+                    os.path.join(storage_directory, folder))
+                file_path = os.path.join(
+                    storage_directory, folder, f'_{folder}_tasks.json')
+                file_abs_path = os.path.abspath(file_path)
 
-                    try:
-                        time.sleep(0.3)
-                        create_folder(folder)
-                        console.print(
-                            f"[green]✔[/green] Successfully created [light_slate_blue][link=file:///{folder_abs_path}]{folder}[/link][/light_slate_blue] and ready for tasks.\n[green]✔[/green] Successfully created [grey39][link=file:///{file_abs_path}]_{folder}.json[/link][/grey39].")
-                    except FileExistsError:
-                        console.print(
-                            f"[red bold]x[/red bold] [light_slate_blue][link=file:///{folder_abs_path}]{folder}[/link][/light_slate_blue] already exists.")
-                    except PermissionError:
-                        print(f"Permission denied: Unable to create '{folder}'")
-                    except Exception as e:
-                        print(f"An error occured: {e}")
+                try:
+                    time.sleep(0.3)
+                    create_folder(folder)
+                    console.print(
+                        f"[green]✔[/green] Successfully created [light_slate_blue][link=file:///{folder_abs_path}]{folder}[/link][/light_slate_blue] and ready for tasks.\n[green]✔[/green] Successfully created [grey39][link=file:///{file_abs_path}]_{folder}.json[/link][/grey39].")
+                except FileExistsError:
+                    console.print(
+                        f"[red bold]x[/red bold] [light_slate_blue][link=file:///{folder_abs_path}]{folder}[/link][/light_slate_blue] already exists.")
+                except PermissionError:
+                    print(
+                        f"Permission denied: Unable to create '{folder}'")
+                except Exception as e:
+                    print(f"An error occured: {e}")
 
+        options = [
+            Choice(name='View all projects', value=0),
+            Choice(name='Create new project', value=1),
+            Choice(name='Back to main menu', value=2)
+        ]
+        linebreak()
+        selected_option = inquirer.select(
+            message='Select option',
+            pointer=app_config['pointer'],
+            style=custom_syles,
+            choices=options
+        ).execute()
+
+        if selected_option == 0:
+            view_projects()
+        if selected_option == 1:
+            create_new_project()
+        if selected_option == 2:
+            main_menu()
 
 # view all projects
+
+
 def view_projects():
     heading("View projects")
 
@@ -247,7 +322,7 @@ def view_projects():
         if selected_option == 1:
             create_new_project()
         if selected_option == 3 or selected_option == None:
-            main_menu() 
+            main_menu()
     else:
         for (index, project) in enumerate(projects):
             project_choice = Choice(name=project, value=project)
@@ -525,10 +600,11 @@ def load_tasks(project):
 def view_configuration():
     heading("App configuration")
 
-    console.print(f"  [grey39]Project directory[/grey39]: {app_config['project_directory']}")
-    console.print(f"  [grey39]Theme[/grey39]:  {app_config['theme']}")
-    console.print(f"  [grey39]Pointer[/grey39]: {app_config['pointer']}")
-    
+    console.print(
+        f"  [grey46]Project directory[/grey46]: {app_config['project_directory']}")
+    console.print(f"  [grey46]Theme[/grey46]:  {app_config['theme']}")
+    console.print(f"  [grey46]Pointer[/grey46]: {app_config['pointer']}")
+
     options = [
         Choice(name="Update configuration", value=0),
         Choice(name="Back to main menu", value=1),
@@ -549,13 +625,93 @@ def view_configuration():
     if selected_option == 1:
         main_menu()
 
+# update the configuration
+
 
 def update_configuration():
-    pass
+    configure_application(title='Update configuration')
 
 
 def view_reports():
-    pass
+
+    heading("Reports")
+
+    projects = get_projects()
+
+    if len(projects) < 1:
+        console.print("  [bright_magenta]*You don't have any projects yet")
+        options = [
+            Choice(name='Create tasks from exisiting project', value=0),
+            Choice(name='Create a new project', value=1),
+            Choice(name='Back to main menu', value=3)
+        ]
+
+        linebreak()
+
+        selected_option = inquirer.select(
+            message='Select option',
+            choices=options,
+            pointer=app_config['pointer'],
+            style=custom_syles
+        ).execute()
+
+        if selected_option == 0:
+            generate_tasks_for_projects()
+        if selected_option == 1:
+            create_new_project()
+        if selected_option == 3 or selected_option == None:
+            main_menu()
+
+    else:
+        reports_table = Table(title='Tasks')
+
+        reports_table.add_column("#", justify="center", style="bright_cyan")
+        reports_table.add_column("Folder", justify="left", style="#e5c07b")
+        reports_table.add_column("Progress", justify="left", style="#e5c07b")
+
+        for (index, project) in enumerate(projects):
+            completed_tasks = 0
+            pending_tasks = 0
+            total_tasks = 0
+            
+
+            for (index, (task_id, task_details)) in enumerate(load_tasks(project).items()):
+                total_tasks += 1
+                if task_details['isComplete'] == True:
+                    completed_tasks += 1
+                else:
+                    pending_tasks += 1
+
+            percentage_complete = round(
+                (completed_tasks/total_tasks)*100) if total_tasks > 0 else 0
+            bars = int(percentage_complete / 10) if total_tasks > 0 else 0
+            strokes = 10 - bars
+
+            graph = f"[{'[white]█[/white]'*bars}{'-'*strokes}]"
+
+            stats = f"{graph} {percentage_complete}% ({completed_tasks}/{total_tasks})"
+
+            reports_table.add_row(str(index + 1), project, stats)
+
+        console.print(reports_table)
+
+
+        report_options = [
+            Choice(name='Export reports',value=0),
+            Choice(name='Back to main menu', value=1)
+        ]
+
+        linebreak()
+
+        selected_report_option = inquirer.select(
+            message='Select option',
+            choices=report_options,
+            pointer=app_config['pointer'],
+            style=custom_syles
+        ).execute()
+
+        if selected_report_option == 1:
+            main_menu()
 
 
 def exit_application():

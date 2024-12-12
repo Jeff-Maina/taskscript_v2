@@ -45,7 +45,6 @@ def create_folder(folder):
 
 def get_projects():
     folders = os.listdir(storage_directory)
-
     return folders
 
 def get_json_file(project):
