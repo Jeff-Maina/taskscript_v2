@@ -80,6 +80,9 @@ def main_menu():
     if main_menu_choice == 1:
         view_projects()
 
+    if main_menu_choice == 2:
+        view_configuration()
+
 
 def manage_project_tasks():
 
@@ -143,12 +146,21 @@ def create_new_project():
     folder_abs_path = os.path.abspath(folder_path)
 
     try:
-        with console.status("[magenta]Generating tasks...") as status:
+        folder_abs_path = os.path.abspath(
+            os.path.join(storage_directory, new_project_title))
+        file_path = os.path.join(
+            storage_directory, new_project_title, f'_{new_project_title}_tasks.json')
+        file_abs_path = os.path.abspath(file_path)
+
+        with console.status("Creating folders..."):
             time.sleep(0.3)
             create_folder(new_project_title)
+            console.print(
+                f"[green]✔[/green] Successfully created [light_slate_blue][link=file:///{folder_abs_path}]{new_project_title}[/link][/light_slate_blue] and ready for tasks.\n[green]✔[/green] Successfully created [grey39][link=file:///{file_abs_path}]_{new_project_title}.json[/link][/grey39].")
+
     except FileExistsError:
         console.print(
-            f"[red bold]✗[/red bold] [light_slate_blue][link=file:///{folder_abs_path}]{new_project_title}[/link][/light_slate_blue] already exists.")
+            f"[red bold]x[/red bold] [light_slate_blue][link=file:///{folder_abs_path}]{folder}[/link][/light_slate_blue] already exists.")
     except PermissionError:
         console.print(
             f"[red bold]✗[/red bold] Permission denied: Unable to create '{new_project_title}'")
@@ -170,38 +182,41 @@ def generate_tasks_for_projects():
 
     selected_folders = inquirer.checkbox(
         message="Select folders to generate tasks for",
+        instruction='Leave blank to go back',
         choices=available_folders,
         pointer=app_config['pointer']
     ).execute()
 
-    linebreak()
+    if len(selected_folders) < 1:
+        main_menu()
+    else:
+        linebreak()
 
-    if len(selected_folders) > 0:
-        with console.status("Creating folders..."):
-            for folder in selected_folders:
+        if len(selected_folders) > 0:
+            with console.status("Creating folders..."):
+                for folder in selected_folders:
 
-                folder_abs_path = os.path.abspath(
-                    os.path.join(storage_directory, folder))
-                file_path = os.path.join(
-                    storage_directory, folder, f'_{folder}_tasks.json')
-                file_abs_path = os.path.abspath(file_path)
+                    folder_abs_path = os.path.abspath(
+                        os.path.join(storage_directory, folder))
+                    file_path = os.path.join(
+                        storage_directory, folder, f'_{folder}_tasks.json')
+                    file_abs_path = os.path.abspath(file_path)
 
-                try:
-                    time.sleep(0.3)
-                    create_folder(folder)
-                    console.print(
-                        f"[green]✔[/green] Successfully created [light_slate_blue][link=file:///{folder_abs_path}]{folder}[/link][/light_slate_blue] and ready for tasks.\n[green]✔[/green] Successfully created [grey39][link=file:///{file_abs_path}]_{folder}.json[/link][/grey39].")
-                except FileExistsError:
-                    console.print(
-                        f"[red bold]x[/red bold] [light_slate_blue][link=file:///{folder_abs_path}]{folder}[/link][/light_slate_blue] already exists.")
-                except PermissionError:
-                    print(f"Permission denied: Unable to create '{folder}'")
-                except Exception as e:
-                    print(f"An error occured: {e}")
+                    try:
+                        time.sleep(0.3)
+                        create_folder(folder)
+                        console.print(
+                            f"[green]✔[/green] Successfully created [light_slate_blue][link=file:///{folder_abs_path}]{folder}[/link][/light_slate_blue] and ready for tasks.\n[green]✔[/green] Successfully created [grey39][link=file:///{file_abs_path}]_{folder}.json[/link][/grey39].")
+                    except FileExistsError:
+                        console.print(
+                            f"[red bold]x[/red bold] [light_slate_blue][link=file:///{folder_abs_path}]{folder}[/link][/light_slate_blue] already exists.")
+                    except PermissionError:
+                        print(f"Permission denied: Unable to create '{folder}'")
+                    except Exception as e:
+                        print(f"An error occured: {e}")
+
 
 # view all projects
-
-
 def view_projects():
     heading("View projects")
 
@@ -209,22 +224,47 @@ def view_projects():
 
     fuzzy_projects = []
 
-    for (index, project) in enumerate(projects):
-        project_choice = Choice(name=project, value=project)
-        fuzzy_projects.append(project_choice)
+    if len(projects) < 1:
+        console.print("  [bright_magenta]*You don't have any projects yet")
 
-    selected_project = inquirer.fuzzy(
-        message='Select project',
-        choices=fuzzy_projects + ['◀ Back to main menu'],
-        style=custom_syles,
-        pointer=app_config['pointer'],
-        match_exact=True
-    ).execute()
+        options = [
+            Choice(name='Create tasks from exisiting project', value=0),
+            Choice(name='Create a new project', value=1),
+            Choice(name='Back to main menu', value=3)
+        ]
 
-    if selected_project == '◀ Back to main menu':
-        main_menu()
+        linebreak()
+
+        selected_option = inquirer.select(
+            message='Select option',
+            choices=options,
+            pointer=app_config['pointer'],
+            style=custom_syles
+        ).execute()
+
+        if selected_option == 0:
+            generate_tasks_for_projects()
+        if selected_option == 1:
+            create_new_project()
+        if selected_option == 3 or selected_option == None:
+            main_menu() 
     else:
-        view_project_tasks(selected_project)
+        for (index, project) in enumerate(projects):
+            project_choice = Choice(name=project, value=project)
+            fuzzy_projects.append(project_choice)
+
+        selected_project = inquirer.fuzzy(
+            message='Select project',
+            choices=fuzzy_projects + ['◀ Back to main menu'],
+            style=custom_syles,
+            pointer=app_config['pointer'],
+            match_exact=True
+        ).execute()
+
+        if selected_project == '◀ Back to main menu':
+            main_menu()
+        else:
+            view_project_tasks(selected_project)
 
 
 def view_project_tasks(project):
@@ -483,7 +523,31 @@ def load_tasks(project):
 
 
 def view_configuration():
-    pass
+    heading("App configuration")
+
+    console.print(f"  [grey39]Project directory[/grey39]: {app_config['project_directory']}")
+    console.print(f"  [grey39]Theme[/grey39]:  {app_config['theme']}")
+    console.print(f"  [grey39]Pointer[/grey39]: {app_config['pointer']}")
+    
+    options = [
+        Choice(name="Update configuration", value=0),
+        Choice(name="Back to main menu", value=1),
+    ]
+
+    linebreak()
+
+    selected_option = inquirer.select(
+        message='Select option',
+        style=custom_syles,
+        pointer=app_config['pointer'],
+        choices=options,
+        default=1
+    ).execute()
+
+    if selected_option == 0:
+        update_configuration()
+    if selected_option == 1:
+        main_menu()
 
 
 def update_configuration():
