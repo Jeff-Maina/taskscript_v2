@@ -393,6 +393,7 @@ def view_project_tasks(project):
         select_tasks(project, tasks, selected_indices)
     if selected_option == 3:
         pass
+
     if selected_option == 6:
         main_menu()
 
@@ -754,7 +755,5 @@ def view_reports():
 
 
 def exit_application():
-    clear_terminal()
-    linebreak()
-    console.print("Goodbye!")
-    linebreak()
+    heading("Exited application")
+    exit
