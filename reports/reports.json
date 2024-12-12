@@ -1,0 +1,9 @@
+[
+{"id": 1, "project": "lab", "completed_tasks": 0, "pending_tasks": 1, "total_tasks": 1},
+{"id": 2, "project": "python_project", "completed_tasks": 0, "pending_tasks": 0, "total_tasks": 0},
+{"id": 3, "project": "Challenge-4-Flatdango", "completed_tasks": 0, "pending_tasks": 0, "total_tasks": 0},
+{"id": 4, "project": "wysiwyg", "completed_tasks": 0, "pending_tasks": 0, "total_tasks": 0},
+{"id": 5, "project": "python_practise", "completed_tasks": 0, "pending_tasks": 0, "total_tasks": 0},
+{"id": 6, "project": "tasks", "completed_tasks": 0, "pending_tasks": 0, "total_tasks": 0},
+{"id": 7, "project": "TEST_PROJECT", "completed_tasks": 0, "pending_tasks": 0, "total_tasks": 0}
+]

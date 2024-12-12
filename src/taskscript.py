@@ -9,7 +9,7 @@ import json
 import os
 import time
 
-from .utils import linebreak, clear_terminal, get_configuration, create_folder, get_projects, heading, get_json_file
+from .utils import linebreak, generate_report, clear_terminal, get_configuration, create_folder, get_projects, heading, get_json_file
 from .styles import custom_syles
 from .constants import themes, pointer_options, priority_options
 from .task import Task
@@ -220,8 +220,6 @@ def create_new_project():
         create_new_project()
     if selected_option == 2:
         main_menu()
-
-
 
 
 # generate tasks for each project
@@ -665,15 +663,16 @@ def view_reports():
     else:
         reports_table = Table(title='Tasks')
 
+        data = []
+
         reports_table.add_column("#", justify="center", style="bright_cyan")
         reports_table.add_column("Folder", justify="left", style="#e5c07b")
         reports_table.add_column("Progress", justify="left", style="#e5c07b")
 
-        for (index, project) in enumerate(projects):
+        for (project_index, project) in enumerate(projects):
             completed_tasks = 0
             pending_tasks = 0
             total_tasks = 0
-            
 
             for (index, (task_id, task_details)) in enumerate(load_tasks(project).items()):
                 total_tasks += 1
@@ -691,13 +690,20 @@ def view_reports():
 
             stats = f"{graph} {percentage_complete}% ({completed_tasks}/{total_tasks})"
 
-            reports_table.add_row(str(index + 1), project, stats)
+            data.append({
+                'id': project_index + 1,
+                'project': project,
+                'completed_tasks': completed_tasks,
+                'pending_tasks': pending_tasks,
+                'total_tasks': total_tasks
+            })
+
+            reports_table.add_row(str(project_index + 1), project, stats)
 
         console.print(reports_table)
 
-
         report_options = [
-            Choice(name='Export reports',value=0),
+            Choice(name='Export reports', value=0),
             Choice(name='Back to main menu', value=1)
         ]
 
@@ -709,6 +715,39 @@ def view_reports():
             pointer=app_config['pointer'],
             style=custom_syles
         ).execute()
+
+        if selected_report_option == 0:
+            format_options = [
+                Choice(name='CSV', value='csv'),
+                Choice(name='JSON', value='json'),
+                Choice(name='HTML', value='html'),
+                Choice(name='SVG', value='svg'),
+            ]
+
+            selected_formats = inquirer.select(
+                message='Select format',
+                style=custom_syles,
+                choices=format_options,
+                multiselect=True
+
+            ).execute()
+
+            generate_report(selected_formats, reports_table, data)
+
+            linebreak()
+
+            next_steps = [
+                Choice(name='Back to main menu',value=0)
+            ]
+
+            next_step = inquirer.select(
+                message='Select option',
+                choices=next_steps,
+                pointer=app_config['pointer'],
+                style=custom_syles
+            ).execute()
+
+            main_menu()
 
         if selected_report_option == 1:
             main_menu()
