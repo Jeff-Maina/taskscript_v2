@@ -236,13 +236,13 @@ def view_project_tasks(project):
     console.print(
         f"\n  [underline]{project}[/underline]  [grey39][{len(completed_tasks)}/{len(tasks)}][/grey39]\n")
 
-    for task_id, task_details in tasks.items():
+    for index, (task_id, task_details) in enumerate(tasks.items()):
         isComplete = task_details['isComplete']
         status = '✔' if isComplete else "□"
         description = f"[grey39]{task_details['description']}[/grey39]" if isComplete else f"{task_details['description']}"
 
         console.print(
-            f"  {task_details['_id']}. {status} {description} [yellow]{','.join(task_details['tags'])}[/yellow]")
+            f"  {index + 1}. {status} {description} [yellow]{' '.join(task_details['tags'])}[/yellow]")
 
     task_options = [
         Choice(name="Add task", value=0),
@@ -269,6 +269,15 @@ def view_project_tasks(project):
 
         view_project_tasks(project)
 
+    if selected_option == 1:
+        edit_task(project, tasks)
+
+        view_project_tasks(project)
+
+    if selected_option == 2:
+        pass
+    if selected_option == 3:
+        pass
     if selected_option == 6:
         main_menu()
 
@@ -296,7 +305,8 @@ def add_task(project, tasks):
         pointer=app_config['pointer']
     ).execute()
 
-    task_tags = [f'@{tag.strip()}' for tag in task_tags.split(',') if tag.strip()]
+    task_tags = [
+        f'@{tag.strip()}' for tag in task_tags.split(',') if tag.strip()]
 
     task = Task(len(tasks) + 1, task_description, priority, task_tags)
 
@@ -307,6 +317,48 @@ def add_task(project, tasks):
 
     with open(json_path, 'w') as file:
         json.dump(tasks, file)
+
+
+def edit_task(project, tasks):
+
+    selected_task = inquirer.number(
+        message='Enter the task index',
+        style=custom_syles,
+        min_allowed=1,
+        max_allowed=len(tasks)
+    ).execute()
+
+    task = tasks[selected_task]
+
+    new_title = inquirer.text(
+        message="Enter new task description",
+        style=custom_syles,
+        default=task['description']
+    ).execute()
+
+    tags = inquirer.text(
+        message='Enter tags',
+        default=",".join(task['tags']),
+        style=custom_syles
+    ).execute()
+
+    priority = inquirer.select(
+        message='Enter new priority',
+        default=task['priority'],
+        style=custom_syles, 
+        choices=priority_options
+    ).execute()
+
+    task['title'] = new_title
+    task['tags'] = tags.split(",")
+    task['priority'] = priority
+
+    file_path = os.path.join(storage_directory, project,
+                             f'_{project}-todos.json')
+
+    with open(file_path, 'w') as f:
+        json.dump(tasks, f)
+
 
 # load tasks from json file
 
