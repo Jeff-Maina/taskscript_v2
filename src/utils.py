@@ -6,7 +6,7 @@ console = Console()
 
 
 config_file = os.path.join('../taskscript_v2', '.config.json')
-storage_directory = './.storage'
+storage_directory = os.path.join('./.storage')
 
 def clear_terminal():
     os.system('cls' if os.name == 'nt' else 'clear')
@@ -47,3 +47,7 @@ def get_projects():
     folders = os.listdir(storage_directory)
 
     return folders
+
+def get_json_file(project):
+    return os.path.join(storage_directory, project,
+                             f'_{project}-todos.json')

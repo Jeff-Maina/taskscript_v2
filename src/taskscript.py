@@ -8,7 +8,7 @@ import json
 import os
 import time
 
-from .utils import linebreak, clear_terminal, get_configuration, create_folder, get_projects, heading
+from .utils import linebreak, clear_terminal, get_configuration, create_folder, get_projects, heading, get_json_file
 from .styles import custom_syles
 from .constants import themes, pointer_options, priority_options
 from .task import Task
@@ -314,8 +314,7 @@ def add_task(project, tasks):
 
     tasks[task._id] = task.to_json()
 
-    json_path = os.path.join(storage_directory, project,
-                             f'_{project}-todos.json')
+    json_path = get_json_file(project)
 
     with open(json_path, 'w') as file:
         json.dump(tasks, file)
@@ -355,8 +354,7 @@ def edit_task(project, tasks):
     task['tags'] = tags.split(",")
     task['priority'] = priority
 
-    file_path = os.path.join(storage_directory, project,
-                             f'_{project}-todos.json')
+    file_path = get_json_file(project)
 
     with open(file_path, 'w') as f:
         json.dump(tasks, f)
@@ -369,8 +367,7 @@ def delete_task(project, tasks, selected_indices):
 def select_tasks(project, tasks, selected_indices):
     heading(f"Selected tasks [grey39]{len(selected_indices)} selected")
 
-    file_path = os.path.join(storage_directory, project,
-                             f'_{project}-todos.json')
+    file_path = get_json_file(project)
 
     for index, (task_id, task_details) in enumerate(tasks.items()):
         if (index + 1) in selected_indices:
@@ -409,6 +406,43 @@ def select_tasks(project, tasks, selected_indices):
         with open(file_path, 'w') as f:
             json.dump(tasks, f)
 
+        view_project_tasks(project)
+
+    if select_action == 1:
+        priority = inquirer.select(
+            message="Select priority",
+            choices=priority_options,
+            style=custom_syles,
+            default='Medium',
+            pointer=app_config['pointer']
+        ).execute()
+
+        for index, (task_id, task_details) in enumerate(tasks.items()):
+            if (index + 1) in selected_indices:
+                task_details['priority'] = priority
+
+        view_project_tasks(project)
+
+    if select_action == 2:
+        for index, (task_id, task_details) in enumerate(tasks.items()):
+            if (index + 1) in selected_indices:
+                task_details['isComplete'] = True
+
+    if select_action == 3:
+        for index, (task_id, task_details) in enumerate(tasks.items()):
+            if (index + 1) in selected_indices:
+                task_details['isComplete'] = False
+
+    if select_action == 4:
+
+        filtered_tasks = {task_id: task_details for index, (task_id, task_details) in enumerate(
+            tasks.items()) if (index + 1) not in selected_indices}
+
+        with open(file_path, 'w') as f:
+            json.dump(filtered_tasks, f)
+
+        view_project_tasks(project)
+
     if select_action == 5:
         view_project_tasks(project)
 
@@ -425,9 +459,8 @@ def render_task(details, index):
 
 
 def load_tasks(project):
-    json_path = os.path.join(storage_directory, project,
-                             f'_{project}-todos.json')
-
+    
+    json_path = get_json_file(project)
     with open(json_path, 'r') as file:
         data = json.load(file)
 
