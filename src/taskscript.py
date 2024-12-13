@@ -709,6 +709,7 @@ def select_tasks(project, tasks, selected_indices):
 
 def render_task(details, index):
     isComplete = details['isComplete']
+    spacer = ' ' if index + 1 < 10 else ''
     status = '[chartreuse1]✔[/chartreuse1]' if isComplete else "□"
     description = f"[grey39]{details['description']}[/grey39]" if isComplete else f"{details['description']}"
 
@@ -716,7 +717,7 @@ def render_task(details, index):
                   '[green3]∙[/green3]', '[cornflower_blue]∙[/cornflower_blue]']
 
     console.print(
-        f"  [yellow]{'★' if details['isStarred'] else ' '} [/yellow][grey30]{index + 1}.[/grey30] {status} {description} [grey39]{task_createdAt(details['_timestamp'])}[/grey39][yellow]{''.join([f' @{tag.strip()}' for tag in details['tags'] if tag.strip()])}[/yellow] {priorities[details['priority']-1]}")
+        f"  [yellow]{'★' if details['isStarred'] else ' '} [/yellow][grey30]{index + 1}.[/grey30] {spacer}{status} {description} [grey39]{task_createdAt(details['_timestamp'])}[/grey39][yellow]{''.join([f' @{tag.strip()}' for tag in details['tags'] if tag.strip()])}[/yellow] {priorities[details['priority']-1]}")
 
     # load tasks from json file
 
