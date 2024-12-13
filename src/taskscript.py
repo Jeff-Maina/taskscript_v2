@@ -340,7 +340,7 @@ def view_projects():
             view_project_tasks(selected_project)
 
 
-def view_project_tasks(project, filter=''):
+def view_project_tasks(project, filter='', sort_option='', sort_order=''):
     clear_terminal()
     tasks = load_tasks(project)
 
@@ -349,10 +349,23 @@ def view_project_tasks(project, filter=''):
     filter_category = 'priority' if filter in [
         'high', 'normal', 'low'] else 'status' if filter in ['completed', 'pending'] else 'tag'
 
+    arrow = '▲' if sort_order =='asc' else '▼'
     console.print(
-        f"\n  [underline]{project}[/underline]{f' ∙ {filter_category} [grey39]|[/grey39] {filter}' if filter and not filter == 'all' else ''} ∙ [grey39][{len(completed_tasks)}/{len(tasks)}][/grey39]\n")
+        f"\n  [underline]{project}[/underline]{f' ∙ {filter_category} [grey39]|[/grey39] {filter}' if filter and not filter == 'all' else ''}{f' ∙ {arrow} {sort_option}' if not sort_option == '' else ''} ∙ [grey39][{len(completed_tasks)}/{len(tasks)}][/grey39]\n")
 
-    for index, (task_id, task_details) in enumerate(tasks.items()):
+    state_tasks = tasks.items()
+
+    def priority_sort(task):
+        (task_id, task_details) = task
+
+        return task_details['priority'] * -1 if sort_order == 'desc' else task_details['priority'] * 1
+
+    if sort_option == 'priority':
+        sorted_tasks = sorted(state_tasks, key=priority_sort)
+
+        state_tasks = sorted_tasks
+
+    for index, (task_id, task_details) in enumerate(state_tasks):
         if filter == 'all' or filter == '':
             render_task(task_details, index)
         if filter == 'completed':
@@ -371,7 +384,8 @@ def view_project_tasks(project, filter=''):
             render_task(
                 task_details, index) if not task_details['priority'] == 3 else None
         if filter.startswith("@"):
-            render_task(task_details, index) if filter[1:] in task_details['tags'] else None
+            render_task(
+                task_details, index) if filter[1:] in task_details['tags'] else None
 
     task_options = [
         Choice(name="Add task", value=0),
@@ -379,7 +393,7 @@ def view_project_tasks(project, filter=''):
         Choice(name="Select tasks", value=2),
         Choice(name="Filter tasks", value=3),
         Choice(name="Search tasks", value=4),
-        Choice(name="Sort tasks", value=4),
+        Choice(name="Sort tasks", value=8),
         Choice(name="Export/Import tasks", value=5),
         Choice(name="Go back to main menu", value=6),
         Choice(name="Exit application", value=7)
@@ -489,6 +503,33 @@ def view_project_tasks(project, filter=''):
 
     if selected_option == 7:
         exit_application()
+
+    if selected_option == 8:
+        sorting_categories = [
+            Choice(name='Sort by Date', value='date'),
+            Choice(name='Sort by Priority', value='priority'),
+        ]
+
+        sorting_orders = [
+            Choice(name='Ascending', value='asc'),
+            Choice(name='Descending', value='desc')
+        ]
+
+        sorting_option = inquirer.select(
+            message='Sort by',
+            choices=sorting_categories,
+            pointer=app_config['pointer'],
+            style=custom_syles
+        ).execute()
+
+        sorting_order = inquirer.select(
+            message='Select sorting order',
+            choices=sorting_orders,
+            pointer=app_config['pointer'],
+            style=custom_syles
+        ).execute()
+
+        view_project_tasks(project, '', sorting_option, sorting_order)
 
 
 def add_task(project, tasks):
