@@ -553,7 +553,7 @@ def add_task(project, tasks):
     ).execute()
 
     task_tags = [
-        f'@{tag.strip()}' for tag in task_tags.split(',') if tag.strip()]
+        tag.strip() for tag in task_tags.split(',') if tag.strip()]
 
     task = Task(len(tasks) + 1, task_description, priority, task_tags)
 
@@ -712,11 +712,11 @@ def render_task(details, index):
     status = '[chartreuse1]✔[/chartreuse1]' if isComplete else "□"
     description = f"[grey39]{details['description']}[/grey39]" if isComplete else f"{details['description']}"
 
-    priorities = ['[cornflower_blue]∙[/cornflower_blue]',
-                  '[green3]∙[/green3]', '[red3]∙[/red3]']
+    priorities = ['[red3]∙[/red3]',
+                  '[green3]∙[/green3]', '[cornflower_blue]∙[/cornflower_blue]']
 
     console.print(
-        f"  [yellow]{'★' if details['isStarred'] else ' '} [/yellow][grey30]{index + 1}.[/grey30] {status} {description} [grey39]{task_createdAt(details['_timestamp'])}[/grey39] [yellow]{' '.join([f'@{tag.strip()} ' for tag in details['tags'] if tag.strip()])}[/yellow]{priorities[details['priority']]}")
+        f"  [yellow]{'★' if details['isStarred'] else ' '} [/yellow][grey30]{index + 1}.[/grey30] {status} {description} [grey39]{task_createdAt(details['_timestamp'])}[/grey39][yellow]{''.join([f' @{tag.strip()}' for tag in details['tags'] if tag.strip()])}[/yellow] {priorities[details['priority']-1]}")
 
     # load tasks from json file
 
