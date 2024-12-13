@@ -1,6 +1,7 @@
 import os
 import json
 import time
+import datetime
 
 from rich.console import Console
 console = Console(record=True)
@@ -126,3 +127,26 @@ def generate_report(selected_formats, table, reports_data):
                     console.print(
                         f"[green]✔[/green] Successfully created [light_slate_blue][link=file:///{os.path.abspath(os.path.join(reports_folder, 'reports.json'))}]reports.json[/link][/light_slate_blue]")
                     time.sleep(0.2)
+
+
+def task_createdAt(timestamp):
+    now = datetime.datetime.now()
+    target_time = datetime.datetime.fromtimestamp(timestamp)
+    delta = now - target_time
+
+    total_seconds = int(delta.total_seconds())
+
+    days = total_seconds // 86400  
+    hours = (total_seconds % 86400) // 3600  
+    minutes = (total_seconds % 3600) // 60
+
+    if total_seconds < 60:
+        return f"{total_seconds}s"
+    
+    if total_seconds < 3600:
+        return f"{minutes}m"
+    
+    if total_seconds < 86400:
+        return f"{hours}h"
+
+    return f"{days}d"

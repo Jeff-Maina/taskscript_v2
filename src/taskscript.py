@@ -9,7 +9,7 @@ import json
 import os
 import time
 
-from .utils import linebreak, generate_report, clear_terminal, get_configuration, create_folder, get_projects, heading, get_json_file
+from .utils import linebreak, generate_report, task_createdAt, clear_terminal, get_configuration, create_folder, get_projects, heading, get_json_file
 from .styles import custom_syles
 from .constants import themes, pointer_options, priority_options
 from .task import Task
@@ -340,7 +340,7 @@ def view_projects():
             view_project_tasks(selected_project)
 
 
-def view_project_tasks(project):
+def view_project_tasks(project, filter=''):
     clear_terminal()
     tasks = load_tasks(project)
 
@@ -350,13 +350,26 @@ def view_project_tasks(project):
         f"\n  [underline]{project}[/underline]  [grey39][{len(completed_tasks)}/{len(tasks)}][/grey39]\n")
 
     for index, (task_id, task_details) in enumerate(tasks.items()):
-        render_task(task_details, index)
+        if filter == 'completed':
+            render_task(
+                task_details, index) if task_details['isComplete'] else None
+
+        if filter == 'pending':
+            render_task(
+                task_details, index) if not task_details['isComplete'] else None
+
+        if filter == 'all' or filter == '':
+            render_task(task_details, index)
+
+        
+
     task_options = [
         Choice(name="Add task", value=0),
         Choice(name="Edit task", value=1),
         Choice(name="Select tasks", value=2),
         Choice(name="Filter tasks", value=3),
         Choice(name="Search tasks", value=4),
+        Choice(name="Sort tasks", value=4),
         Choice(name="Export/Import tasks", value=5),
         Choice(name="Go back to main menu", value=6),
         Choice(name="Exit application", value=7)
@@ -391,8 +404,51 @@ def view_project_tasks(project):
                             for task in selected_tasks.split(",") if task.strip()]
 
         select_tasks(project, tasks, selected_indices)
+
     if selected_option == 3:
-        pass
+        filter_categories = [
+            Choice(name="Filter by Status", value="status"),
+            Choice(name="Filter by Tags", value="tag"),
+            Choice(name="Filter by Priority", value="priority"),
+        ]
+
+        status_filters = [
+            Choice(value="all", name="All tasks"),
+            Choice(value="completed", name="Completed tasks"),
+            Choice(value="pending", name="Pending tasks"),
+        ]
+
+        tags = []
+
+        for (task_id, task_details) in tasks.items():
+            for tag in task_details['tags']:
+                tag_choice = Choice(name=tag, value=tag)
+                tags.append(tag_choice)
+
+        filter_option = inquirer.select(
+            message='Filter by:',
+            choices=filter_categories,
+            pointer=app_config['pointer'],
+            default='status'
+        ).execute()
+
+        if filter_option == 'status':
+
+            status_filter = inquirer.select(
+                message='Filter by status',
+                choices=status_filters,
+                pointer=app_config['pointer'],
+                style=custom_syles,
+                default='all'
+            ).execute()
+
+            view_project_tasks(project, status_filter)
+
+        if filter_option == 'tag':
+            pass
+
+        if filter_option == 'priority':
+            pass
 
     if selected_option == 6:
         main_menu()
@@ -417,7 +473,7 @@ def add_task(project, tasks):
         message="Select task priority",
         choices=priority_options,
         style=custom_syles,
-        default='Medium',
+        default='Normal',
         pointer=app_config['pointer']
     ).execute()
 
@@ -578,11 +634,14 @@ def select_tasks(project, tasks, selected_indices):
 
 def render_task(details, index):
     isComplete = details['isComplete']
-    status = '✔' if isComplete else "□"
+    status = '[chartreuse1]✔[/chartreuse1]' if isComplete else "□"
     description = f"[grey39]{details['description']}[/grey39]" if isComplete else f"{details['description']}"
 
+    priorities = ['[cornflower_blue]∙[/cornflower_blue]',
+                  '[green3]∙[/green3]', '[red3]∙[/red3]']
+
     console.print(
-        f"  {index + 1}. {status} {description} [yellow]{' '.join(details['tags'])}[/yellow]")
+        f"  [yellow]{'★' if details['isStarred'] else ' '} [/yellow][grey30]{index + 1}.[/grey30] {status} {description} [grey39]{task_createdAt(details['_timestamp'])}[/grey39] [yellow]{' '.join([f'@{tag.strip()} ' for tag in details['tags'] if tag.strip()])}[/yellow]{priorities[details['priority']]}")
 
     # load tasks from json file
 
@@ -738,7 +797,7 @@ def view_reports():
             linebreak()
 
             next_steps = [
-                Choice(name='Back to main menu',value=0)
+                Choice(name='Back to main menu', value=0)
             ]
 
             next_step = inquirer.select(
