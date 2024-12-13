@@ -346,22 +346,32 @@ def view_project_tasks(project, filter=''):
 
     completed_tasks = [task for task in tasks if tasks[task]['isComplete']]
 
+    filter_category = 'priority' if filter in [
+        'high', 'normal', 'low'] else 'status' if filter in ['completed', 'pending'] else 'tag'
+
     console.print(
-        f"\n  [underline]{project}[/underline]  [grey39][{len(completed_tasks)}/{len(tasks)}][/grey39]\n")
+        f"\n  [underline]{project}[/underline]{f' ∙ {filter_category} [grey39]|[/grey39] {filter}' if filter and not filter == 'all' else ''} ∙ [grey39][{len(completed_tasks)}/{len(tasks)}][/grey39]\n")
 
     for index, (task_id, task_details) in enumerate(tasks.items()):
+        if filter == 'all' or filter == '':
+            render_task(task_details, index)
         if filter == 'completed':
             render_task(
                 task_details, index) if task_details['isComplete'] else None
-
         if filter == 'pending':
             render_task(
                 task_details, index) if not task_details['isComplete'] else None
-
-        if filter == 'all' or filter == '':
-            render_task(task_details, index)
-
-        
+        if filter == 'high':
+            render_task(
+                task_details, index) if not task_details['priority'] == 1 else None
+        if filter == 'normal':
+            render_task(
+                task_details, index) if not task_details['priority'] == 2 else None
+        if filter == 'low':
+            render_task(
+                task_details, index) if not task_details['priority'] == 3 else None
+        if filter.startswith("@"):
+            render_task(task_details, index) if filter[1:] in task_details['tags'] else None
 
     task_options = [
         Choice(name="Add task", value=0),
@@ -418,11 +428,18 @@ def view_project_tasks(project, filter=''):
             Choice(value="pending", name="Pending tasks"),
         ]
 
+        priority_filters = [
+            Choice(name='All tasks', value='all'),
+            Choice(name="High", value='high'),
+            Choice(name="Normal", value='normal'),
+            Choice(name="Low", value='low')
+        ]
+
         tags = []
 
         for (task_id, task_details) in tasks.items():
             for tag in task_details['tags']:
-                tag_choice = Choice(name=tag, value=tag)
+                tag_choice = Choice(name=f'@{tag}', value=f'@{tag}')
                 tags.append(tag_choice)
 
         filter_option = inquirer.select(
@@ -445,10 +462,27 @@ def view_project_tasks(project, filter=''):
             view_project_tasks(project, status_filter)
 
         if filter_option == 'tag':
-            pass
+
+            tags_filter = inquirer.select(
+                message='Filter by priority',
+                choices=[Choice(name='All tasks', value='all')] + tags,
+                pointer=app_config['pointer'],
+                style=custom_syles,
+                default='all'
+            ).execute()
+
+            view_project_tasks(project, tags_filter)
 
         if filter_option == 'priority':
-            pass
+            priority_filter = inquirer.select(
+                message='Filter by priority',
+                choices=priority_filters,
+                pointer=app_config['pointer'],
+                style=custom_syles,
+                default='all'
+            ).execute()
+
+            view_project_tasks(project, priority_filter)
 
     if selected_option == 6:
         main_menu()
