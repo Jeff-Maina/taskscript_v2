@@ -407,11 +407,12 @@ def view_project_tasks(project, filter='', sort_option='', sort_order=''):
 
     linebreak()
 
-    selected_option = inquirer.select(
+    selected_option = inquirer.fuzzy(
         message="Select an option",
         choices=task_options,
         pointer=app_config['pointer'],
-        style=custom_syles
+        style=custom_syles,
+        match_exact=True
     ).execute()
 
     if selected_option == 0:
