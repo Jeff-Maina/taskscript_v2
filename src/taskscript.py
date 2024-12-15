@@ -1,3 +1,10 @@
+from .task import Task
+from .constants import themes, pointer_options, priority_options
+from .styles import custom_syles
+from .utils import linebreak, generate_report, task_createdAt, clear_terminal, get_configuration, create_folder, get_projects, heading, get_json_file
+import time
+import os
+import json
 from InquirerPy import inquirer
 from rich.text import Text
 from rich.console import Console
@@ -5,17 +12,13 @@ from rich.table import Table
 from InquirerPy.base.control import Choice
 from yaspin import yaspin
 from termcolor import colored
+
 from colorama import init as colorama_init
+from colorama import Fore
+from colorama import Style
 
+colorama_init()
 
-import json
-import os
-import time
-
-from .utils import linebreak, generate_report, task_createdAt, clear_terminal, get_configuration, create_folder, get_projects, heading, get_json_file
-from .styles import custom_syles
-from .constants import themes, pointer_options, priority_options
-from .task import Task
 
 console = Console()
 
@@ -542,7 +545,7 @@ def search_tasks(project, tasks):
 
     heading("Search task")
 
-    fuzzy_choices = [Choice(name=f"{task_details['description']} [{'completed' if task_details['isComplete'] else 'pending'}]", value=(index+1)) for index, (
+    fuzzy_choices = [Choice(name=f" {'✔' if task_details['isComplete'] else '□'} {task_details['description']}", value=(index+1)) for index, (
         task_id, task_details) in enumerate(tasks.items())]
 
     fuzzy_search = inquirer.fuzzy(
