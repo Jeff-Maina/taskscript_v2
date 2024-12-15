@@ -4,6 +4,9 @@ from rich.console import Console
 from rich.table import Table
 from InquirerPy.base.control import Choice
 from yaspin import yaspin
+from termcolor import colored
+from colorama import init as colorama_init
+
 
 import json
 import os
@@ -287,7 +290,7 @@ def generate_tasks_for_projects():
         if selected_option == 2:
             main_menu()
 
-# view all projects
+# view all project
 
 
 def view_projects():
@@ -349,7 +352,7 @@ def view_project_tasks(project, filter='', sort_option='', sort_order=''):
     filter_category = 'priority' if filter in [
         'high', 'normal', 'low'] else 'status' if filter in ['completed', 'pending'] else 'tag'
 
-    arrow = '▲' if sort_order =='asc' else '▼'
+    arrow = '▲' if sort_order == 'asc' else '▼'
     console.print(
         f"\n  [underline]{project}[/underline]{f' ∙ {filter_category} [grey39]|[/grey39] {filter}' if filter and not filter == 'all' else ''}{f' ∙ {arrow} {sort_option}' if not sort_option == '' else ''} ∙ [grey39][{len(completed_tasks)}/{len(tasks)}][/grey39]\n")
 
@@ -427,7 +430,7 @@ def view_project_tasks(project, filter='', sort_option='', sort_order=''):
         selected_indices = [int(task.strip())
                             for task in selected_tasks.split(",") if task.strip()]
 
-        select_tasks(project, tasks, selected_indices)
+        show_selected_tasks(project, tasks, selected_indices)
 
     if selected_option == 3:
         filter_categories = [
@@ -498,6 +501,9 @@ def view_project_tasks(project, filter='', sort_option='', sort_order=''):
 
             view_project_tasks(project, priority_filter)
 
+    if selected_option == 4:
+        search_tasks(project, tasks)
+
     if selected_option == 6:
         main_menu()
 
@@ -530,6 +536,28 @@ def view_project_tasks(project, filter='', sort_option='', sort_order=''):
         ).execute()
 
         view_project_tasks(project, '', sorting_option, sorting_order)
+
+
+def search_tasks(project, tasks):
+
+    heading("Search task")
+
+    fuzzy_choices = [Choice(name=f"{task_details['description']} [{'completed' if task_details['isComplete'] else 'pending'}]", value=(index+1)) for index, (
+        task_id, task_details) in enumerate(tasks.items())]
+
+    fuzzy_search = inquirer.fuzzy(
+        message='Search task',
+        choices=fuzzy_choices +
+        [Choice(name='◀ Back to main menu', value='back')],
+        pointer=app_config['pointer'],
+        style=custom_syles,
+        match_exact=True
+    ).execute()
+
+    if fuzzy_search == 'back' or fuzzy_search == None:
+        view_project_tasks(project)
+    else:
+        show_selected_tasks(project, tasks, [fuzzy_search])
 
 
 def add_task(project, tasks):
@@ -609,7 +637,7 @@ def delete_task(project, tasks, selected_indices):
     pass
 
 
-def select_tasks(project, tasks, selected_indices):
+def show_selected_tasks(project, tasks, selected_indices):
     heading(f"Selected tasks [grey39]{len(selected_indices)} selected")
 
     file_path = get_json_file(project)
