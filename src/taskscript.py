@@ -1,10 +1,13 @@
 from .task import Task
 from .constants import themes, pointer_options, priority_options
 from .styles import custom_syles
-from .utils import linebreak, generate_report, task_createdAt, clear_terminal, get_configuration, create_folder, get_projects, heading, get_json_file
+from .utils import linebreak, generate_report, task_createdAt, clear_terminal, get_configuration, create_folder, get_projects, heading, get_json_file,export_to_html
+
 import time
 import os
 import json
+import webbrowser
+
 from InquirerPy import inquirer
 from rich.text import Text
 from rich.console import Console
@@ -400,7 +403,7 @@ def view_project_tasks(project, filter='', sort_option='', sort_order=''):
         Choice(name="Filter tasks", value=3),
         Choice(name="Search tasks", value=4),
         Choice(name="Sort tasks", value=8),
-        Choice(name="Export/Import tasks", value=5),
+        Choice(name="Open in browser", value=5),
         Choice(name="Go back to main menu", value=6),
         Choice(name="Exit application", value=7)
     ]
@@ -507,6 +510,10 @@ def view_project_tasks(project, filter='', sort_option='', sort_order=''):
 
     if selected_option == 4:
         search_tasks(project, tasks)
+
+    if selected_option == 5:
+        open_tasks_in_browser(project, tasks)
+        view_project_tasks(project)
 
     if selected_option == 6:
         main_menu()
@@ -660,7 +667,7 @@ def show_selected_tasks(project, tasks, selected_indices):
     ]
 
     linebreak()
-    select_action = inquirer.select(
+    select_action = inquirer.fuzzy(
         message='Select action',
         choices=action_options,
         style=custom_syles,
@@ -762,6 +769,16 @@ def load_tasks(project):
 
     return data
 
+
+def open_tasks_in_browser(project, tasks):
+    html_file = os.path.join(storage_directory, project,
+                             f'_{project}_tasks.html')
+
+    if os.path.exists(html_file):
+        webbrowser.open(html_file)
+    else:
+        export_to_html(project, tasks, html_file)
+        webbrowser.open(html_file)
 
 def view_configuration():
     heading("App configuration")

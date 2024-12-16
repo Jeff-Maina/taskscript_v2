@@ -80,7 +80,7 @@ def generate_report(selected_formats, table, reports_data):
                 html_file = 'reports_table.html'
 
                 html = console.export_html(clear=False)
-               
+
                 with open(os.path.join(reports_folder, html_file), 'w') as file:
                     file.write(html)
 
@@ -130,23 +130,106 @@ def generate_report(selected_formats, table, reports_data):
 
 
 def task_createdAt(timestamp):
+
     now = datetime.datetime.now()
     target_time = datetime.datetime.fromtimestamp(timestamp)
     delta = now - target_time
 
     total_seconds = int(delta.total_seconds())
 
-    days = total_seconds // 86400  
-    hours = (total_seconds % 86400) // 3600  
+    days = total_seconds // 86400
+    hours = (total_seconds % 86400) // 3600
     minutes = (total_seconds % 3600) // 60
 
     if total_seconds < 60:
         return f"{total_seconds}s"
-    
+
     if total_seconds < 3600:
         return f"{minutes}m"
-    
+
     if total_seconds < 86400:
         return f"{hours}h"
 
     return f"{days}d"
+
+
+def export_to_html(project, tasks, file_path):
+    styles = """
+    <style>
+        body {
+            font-family: 'Inter', 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
+        }
+
+        input:checked + label {
+            color: rgb(125, 124, 124);
+            text-decoration: line-through;
+        }
+
+        .task-box{
+            display: flex;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+       .tag {
+            color: rgb(155, 6, 155);
+            font-weight: 600;
+        }
+
+        .priority-badge {
+            height: 4px;
+            width: 4px;
+            border-radius: 50%;
+        }
+        .priority-1 .priority-badge {
+            background-color: red;
+        }
+        .priority-2 .priority-badge {
+            background-color: green;
+        }
+        .priority-3 .priority-badge {
+            background-color: blue;
+        }
+    </style>
+    """
+
+    html_head = f"""
+            <!DOCTYPE html>
+            <html lang="en">
+            <head>
+                <meta charset="UTF-8">
+                <meta http-equiv="X-UA-Compatible" content="IE=edge">
+                <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                <title>{project.capitalize()} Tasks</title>
+                <link rel="preconnect" href="https://fonts.googleapis.com">
+                <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+                <link
+                    href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap"
+                    rel="stylesheet">
+                {styles}
+            </head> 
+        """
+
+    html_tasks = [f"""<div class='task-box priority-{task_details['priority']}'>
+                        <div>
+                            <input type='checkbox' {'checked' if task_details['isComplete'] else ''} id='task-{task_id}'/> 
+                            <label for='task-{task_id}'>{task_details['description']}</label> 
+                        </div> 
+                        <div class='tags'>{''.join([f'<div class="tag">@{tag}</div>' for tag in task_details['tags']])}</div>
+                        <div class='priority-badge'></div>
+                    </div>""" for (
+        task_id, task_details) in tasks.items()]
+
+    html_body = f"""
+            <body>
+                <h3>{project.capitalize()} tasks</h3>
+                <div>
+                    {"".join(html_tasks)}
+                </div>
+            </body>
+            </html>
+    """
+
+    with open(file_path, 'w') as file:
+        file.write(html_head + html_body)
