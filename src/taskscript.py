@@ -634,7 +634,7 @@ def edit_task(project, tasks):
         choices=priority_options
     ).execute()
 
-    task['title'] = new_title
+    task['description'] = new_title
     task['tags'] = tags.split(",")
     task['priority'] = priority
 
