@@ -7,6 +7,7 @@ import time
 import os
 import json
 import webbrowser
+import shutil
 
 from InquirerPy import inquirer
 from rich.text import Text
@@ -301,6 +302,8 @@ def generate_tasks_for_projects():
             main_menu()
 
 # view all project
+
+
 def view_projects():
     heading("View projects")
 
@@ -406,6 +409,7 @@ def view_project_tasks(project, filter='', sort_option='', sort_order=''):
         Choice(name="Search tasks", value=4),
         Choice(name="Sort tasks", value=8),
         Choice(name="Open in browser", value=5),
+        Choice(name="Delete project", value=9),
         Choice(name="Go back to main menu", value=6),
         Choice(name="Exit application", value=7)
     ]
@@ -549,6 +553,9 @@ def view_project_tasks(project, filter='', sort_option='', sort_order=''):
         ).execute()
 
         view_project_tasks(project, '', sorting_option, sorting_order)
+
+    if selected_option == 9:
+        delete_project(project)
 
 
 def search_tasks(project, tasks):
@@ -772,6 +779,22 @@ def load_tasks(project):
     return data
 
 
+def delete_project(project):
+    confirmation = inquirer.confirm(
+        message=f"Are you sure you want to delete {project}?",
+        style=custom_syles,
+    ).execute()
+
+    if confirmation:
+        shutil.rmtree(os.path.join(storage_directory, project))
+        console.print(f'{project} deleted')
+
+        time.sleep(0.3)
+        view_projects()
+    else:
+        view_project_tasks(project)
+
+
 def open_tasks_in_browser(project, tasks):
     html_file = os.path.join(storage_directory, project,
                              f'_{project}_tasks.html')
@@ -812,6 +835,8 @@ def view_configuration():
         main_menu()
 
 # update the configuration
+
+
 def update_configuration():
     configure_application(title='Update configuration')
 
