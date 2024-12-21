@@ -1,7 +1,7 @@
 from .task import Task
 from .constants import themes, pointer_options, priority_options
 from .styles import custom_syles
-from .utils import linebreak, generate_report, task_createdAt, clear_terminal, get_configuration, create_folder, get_projects, heading, get_json_file,export_to_html
+from .utils import linebreak, generate_report, task_createdAt, clear_terminal, get_configuration, create_folder, get_projects, heading, get_json_file, export_to_html
 
 import time
 import os
@@ -211,6 +211,7 @@ def create_new_project():
     linebreak()
 
     options = [
+        Choice(name=f'Open {new_project_title}', value=3),
         Choice(name='View all projects', value=0),
         Choice(name='Create new project', value=1),
         Choice(name='Back to main menu', value=2)
@@ -229,9 +230,12 @@ def create_new_project():
         create_new_project()
     if selected_option == 2:
         main_menu()
-
+    if selected_option == 3:
+        view_project_tasks(new_project_title)
 
 # generate tasks for each project
+
+
 def generate_tasks_for_projects():
     heading("Generate tasks")
     folders = os.listdir(app_config['project_directory'])
@@ -297,8 +301,6 @@ def generate_tasks_for_projects():
             main_menu()
 
 # view all project
-
-
 def view_projects():
     heading("View projects")
 
@@ -587,7 +589,7 @@ def add_task(project, tasks):
         message="Select task priority",
         choices=priority_options,
         style=custom_syles,
-        default='Normal',
+        default=2,
         pointer=app_config['pointer']
     ).execute()
 
@@ -780,6 +782,7 @@ def open_tasks_in_browser(project, tasks):
         export_to_html(project, tasks, html_file)
         webbrowser.open(html_file)
 
+
 def view_configuration():
     heading("App configuration")
 
@@ -809,8 +812,6 @@ def view_configuration():
         main_menu()
 
 # update the configuration
-
-
 def update_configuration():
     configure_application(title='Update configuration')
 
