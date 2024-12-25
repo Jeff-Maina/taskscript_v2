@@ -835,8 +835,6 @@ def view_configuration():
         main_menu()
 
 # update the configuration
-
-
 def update_configuration():
     configure_application(title='Update configuration')
 
