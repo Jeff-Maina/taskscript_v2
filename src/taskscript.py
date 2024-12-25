@@ -469,8 +469,10 @@ def view_project_tasks(project, filter='', sort_option='', sort_order=''):
 
         for (task_id, task_details) in tasks.items():
             for tag in task_details['tags']:
-                tag_choice = Choice(name=f'@{tag}', value=f'@{tag}')
-                tags.append(tag_choice)
+                if tag.strip():
+                    tag_choice = Choice(name=f'@{tag}', value=f'@{tag}')
+                    if tag_choice not in tags:
+                        tags.append(tag_choice)
 
         filter_option = inquirer.select(
             message='Filter by:',
@@ -835,6 +837,8 @@ def view_configuration():
         main_menu()
 
 # update the configuration
+
+
 def update_configuration():
     configure_application(title='Update configuration')
 
